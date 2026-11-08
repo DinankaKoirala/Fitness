@@ -38,7 +38,7 @@ class ProfileRepository(
     suspend fun saveProfile(input: ProfileInput) = saveMutex.withLock {
         val old = dao.getProfile()
         val now = System.currentTimeMillis()
-        dao.saveProfile(UserProfile(
+        dao.saveProfileWithWeight(UserProfile(
             heightCm = input.heightCm,
             weightKg = input.weightKg,
             age = input.age,
@@ -49,7 +49,7 @@ class ProfileRepository(
             stepGoal = old?.stepGoal ?: 0,
             createdAt = old?.createdAt ?: now,
             updatedAt = now,
-        ))
+        ), java.time.LocalDate.now().toString(), old == null || old.weightKg != input.weightKg)
     }
 
     suspend fun setManualGoal(kcal: Int?) = settings.setOverride(kcal)

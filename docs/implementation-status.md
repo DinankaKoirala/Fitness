@@ -21,7 +21,8 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 6: software verified; user-key imagery and physical terrain acceptance pending; docs/phase-6.md.
 - Phase 7: software verified; docs/phase-7.md.
 - Phase 8: software verified; keyed provider/physical camera acceptance pending; docs/phase-8.md.
-- Phases 9–11: pending.
+- Phase 9: software verified; docs/phase-9.md.
+- Phases 10–11: pending.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require

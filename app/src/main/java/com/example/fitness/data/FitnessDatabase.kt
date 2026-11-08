@@ -20,6 +20,7 @@ abstract class FitnessDatabase : RoomDatabase() {
     abstract fun segmentDao(): SegmentDao
     abstract fun gymDao(): GymDao
     abstract fun aiQueueDao(): AiQueueDao
+    abstract fun trendsDao(): TrendsDao
 
     companion object {
         fun create(context: Context, name: String = "fitness.db"): FitnessDatabase = Room.databaseBuilder(

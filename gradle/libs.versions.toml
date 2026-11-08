@@ -11,6 +11,9 @@ coroutines = "1.9.0"
 play-location = "21.3.0"
 maplibre = "12.0.1"
 okhttp = "4.12.0"
+camerax = "1.4.2"
+tesseract = "4.9.0"
+zxing = "3.5.3"
 junit = "4.13.2"
 test-runner = "1.6.2"
 test-junit = "1.2.1"
@@ -37,6 +40,13 @@ play-location = { module = "com.google.android.gms:play-services-location", vers
 
 maplibre = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+
+tesseract = { module = "cz.adaptech.tesseract4android:tesseract4android", version.ref = "tesseract" }
+zxing = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

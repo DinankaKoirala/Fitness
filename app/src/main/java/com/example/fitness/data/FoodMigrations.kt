@@ -52,3 +52,10 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("INSERT INTO WorkoutExercise (workoutId, exerciseId, position, createdAt) SELECT workoutId, exerciseId, MIN(id), MIN(createdAt) FROM SetEntry GROUP BY workoutId, exerciseId")
     }
 }
+
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS QueuedAiRequest (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, prompt TEXT NOT NULL, imagePath TEXT, response TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_QueuedAiRequest_createdAt ON QueuedAiRequest(createdAt)")
+    }
+}

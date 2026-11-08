@@ -221,3 +221,13 @@ data class RoutineExercise(val routineId: Long, val position: Int, val exerciseI
     indices = [Index("exerciseId")])
 data class WorkoutExercise(val workoutId: Long, val exerciseId: Long, val position: Int,
     val createdAt: Long = System.currentTimeMillis())
+
+@Entity(indices = [Index("createdAt")])
+data class QueuedAiRequest(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val prompt: String,
+    val imagePath: String? = null,
+    val response: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = createdAt,
+)

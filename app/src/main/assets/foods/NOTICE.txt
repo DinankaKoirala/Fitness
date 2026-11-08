@@ -1,0 +1,7 @@
+Swiss Food Composition Database, FSVO, version 7.1 (1 July 2026).
+Source: https://www.naehrwertdaten.ch/en/
+Use and commercial redistribution allowed with source acknowledgment, per official downloads page.
+Bundled English names and selected nutrients, per 100g edible portion; unknown/trace/unparseable values remain null.
+Database values may be calculated/estimated; drafts are labeled estimated and editable.
+XLSX SHA-256: 323bae2eecd639d2c3b3bf3797d30b1426ccb0253fb62810f522778b38089196
+Records: 1246

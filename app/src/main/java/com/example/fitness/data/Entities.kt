@@ -147,6 +147,8 @@ data class Workout(
     val endedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
+    @ColumnInfo(defaultValue = "'Workout'") val name: String = "Workout",
+    val restUntil: Long? = null,
 )
 
 @Entity(
@@ -205,3 +207,17 @@ data class SegmentLabel(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
 )
+
+@Entity(primaryKeys = ["routineId", "position"],
+    foreignKeys = [ForeignKey(entity = Routine::class, parentColumns = ["id"], childColumns = ["routineId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = Exercise::class, parentColumns = ["id"], childColumns = ["exerciseId"], onDelete = ForeignKey.RESTRICT)],
+    indices = [Index("exerciseId")])
+data class RoutineExercise(val routineId: Long, val position: Int, val exerciseId: Long,
+    val createdAt: Long = System.currentTimeMillis())
+
+@Entity(primaryKeys = ["workoutId", "exerciseId"],
+    foreignKeys = [ForeignKey(entity = Workout::class, parentColumns = ["id"], childColumns = ["workoutId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = Exercise::class, parentColumns = ["id"], childColumns = ["exerciseId"], onDelete = ForeignKey.RESTRICT)],
+    indices = [Index("exerciseId")])
+data class WorkoutExercise(val workoutId: Long, val exerciseId: Long, val position: Int,
+    val createdAt: Long = System.currentTimeMillis())

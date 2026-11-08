@@ -25,7 +25,7 @@ class SkeletonTest {
                     while (it.moveToNext()) actual.add(it.getString(0))
                 }
                 assertTrue(actual.containsAll(expected))
-                assertEquals(4, sql.version)
+                assertEquals(5, sql.version)
                 sql.execSQL("INSERT INTO StepDay (date, steps, createdAt, updatedAt) VALUES ('2026-11-08', 123, 1, 1)")
                 sql.query("PRAGMA foreign_keys").use { assertTrue(it.moveToFirst()); assertEquals(1, it.getInt(0)) }
                 sql.query("PRAGMA index_list('LocationPoint')").use { assertTrue(it.moveToFirst()) }

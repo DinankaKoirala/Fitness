@@ -1,0 +1,5 @@
+Exercise names, primary muscle groups and equipment derived from yuhonas/free-exercise-db (Unlicense).
+Source: https://github.com/yuhonas/free-exercise-db
+Upstream dist/exercises.json SHA-256: 5bb747e3fc658f095a60dcbf6d53c96627acdcc6ffb6fffde86f7e26995d40bf
+Bundled count: 876
+Images and exercise instructions are not bundled or fetched at runtime.

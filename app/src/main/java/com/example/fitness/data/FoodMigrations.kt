@@ -39,3 +39,16 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_SegmentLabel_end ON SegmentLabel(end)")
     }
 }
+
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE Workout ADD COLUMN name TEXT NOT NULL DEFAULT 'Workout'")
+        db.execSQL("ALTER TABLE Workout ADD COLUMN restUntil INTEGER")
+        db.execSQL("UPDATE Workout SET name = COALESCE((SELECT name FROM Routine WHERE Routine.id = Workout.routineId), 'Workout')")
+        db.execSQL("CREATE TABLE IF NOT EXISTS RoutineExercise (routineId INTEGER NOT NULL, position INTEGER NOT NULL, exerciseId INTEGER NOT NULL, createdAt INTEGER NOT NULL, PRIMARY KEY(routineId, position), FOREIGN KEY(routineId) REFERENCES Routine(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(exerciseId) REFERENCES Exercise(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_RoutineExercise_exerciseId ON RoutineExercise(exerciseId)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS WorkoutExercise (workoutId INTEGER NOT NULL, exerciseId INTEGER NOT NULL, position INTEGER NOT NULL, createdAt INTEGER NOT NULL, PRIMARY KEY(workoutId, exerciseId), FOREIGN KEY(workoutId) REFERENCES Workout(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(exerciseId) REFERENCES Exercise(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_WorkoutExercise_exerciseId ON WorkoutExercise(exerciseId)")
+        db.execSQL("INSERT INTO WorkoutExercise (workoutId, exerciseId, position, createdAt) SELECT workoutId, exerciseId, MIN(id), MIN(createdAt) FROM SetEntry GROUP BY workoutId, exerciseId")
+    }
+}

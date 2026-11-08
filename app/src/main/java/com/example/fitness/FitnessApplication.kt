@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.fitness.data.FitnessDatabase
 import com.example.fitness.data.StepRepository
 import com.example.fitness.data.SegmentRepository
+import com.example.fitness.data.GymRepository
 import com.example.fitness.data.FoodRepository
 import com.example.fitness.data.ProfileRepository
 import com.example.fitness.data.GoalSettings
@@ -15,6 +16,7 @@ import java.util.concurrent.Executors
 
 class FitnessApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val gym by lazy { GymRepository(database, this) }
     val segments by lazy { SegmentRepository(database) }
     val steps by lazy { StepRepository(database) }
     val foods by lazy { FoodRepository(database) }

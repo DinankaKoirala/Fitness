@@ -2,9 +2,17 @@ package com.example.fitness
 
 import android.app.Application
 import com.example.fitness.data.FitnessDatabase
+import com.example.fitness.data.ProfileRepository
+import com.example.fitness.data.GoalSettings
+import com.example.fitness.data.goalDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.Executors
 
 class FitnessApplication : Application() {
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val profiles by lazy { ProfileRepository(database.profileDao(), GoalSettings(goalDataStore), applicationScope) }
     val database by lazy { FitnessDatabase.create(this) }
 
     override fun onCreate() {

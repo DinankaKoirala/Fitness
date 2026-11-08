@@ -13,6 +13,8 @@ import androidx.room.RoomDatabase
     exportSchema = true,
 )
 abstract class FitnessDatabase : RoomDatabase() {
+    abstract fun profileDao(): ProfileDao
+
     companion object {
         fun create(context: Context): FitnessDatabase = Room.databaseBuilder(
             context.applicationContext,

@@ -8,6 +8,7 @@ interface StepDao {
     @Query("SELECT * FROM StepDay WHERE date = :date") fun observeDay(date: String): Flow<StepDay?>
     @Query("SELECT * FROM StepDay WHERE date = :date") suspend fun day(date: String): StepDay?
     @Query("SELECT * FROM StepCounterState WHERE id = 1") suspend fun baseline(): StepCounterState?
+    @Insert suspend fun insertInterval(interval: StepInterval)
     @Upsert suspend fun saveDay(day: StepDay)
     @Upsert suspend fun saveBaseline(state: StepCounterState)
 }

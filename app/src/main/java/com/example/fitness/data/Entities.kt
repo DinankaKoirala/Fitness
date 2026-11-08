@@ -113,6 +113,8 @@ data class Segment(
     val distance: Double,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
+    @ColumnInfo(defaultValue = "1") val estimated: Boolean = true,
+    @ColumnInfo(defaultValue = "0") val maxSpeed: Double = 0.0,
 )
 
 @Entity(indices = [Index("createdAt")])
@@ -181,6 +183,25 @@ data class StepCounterState(
     val rawCounter: Long,
     val bootCount: Int,
     val eventTime: Long,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = createdAt,
+)
+
+@Entity(indices = [Index("start"), Index("end")])
+data class StepInterval(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val start: Long,
+    val end: Long,
+    val steps: Long,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+@Entity(indices = [Index("start"), Index("end")])
+data class SegmentLabel(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val start: Long,
+    val end: Long,
+    val type: SegmentType,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
 )

@@ -26,3 +26,16 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE TABLE IF NOT EXISTS StepCounterState (id INTEGER NOT NULL, date TEXT NOT NULL, rawCounter INTEGER NOT NULL, bootCount INTEGER NOT NULL, eventTime INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id))")
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE Segment ADD COLUMN estimated INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE Segment ADD COLUMN maxSpeed REAL NOT NULL DEFAULT 0")
+        db.execSQL("CREATE TABLE IF NOT EXISTS StepInterval (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, start INTEGER NOT NULL, end INTEGER NOT NULL, steps INTEGER NOT NULL, createdAt INTEGER NOT NULL)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_StepInterval_start ON StepInterval(start)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_StepInterval_end ON StepInterval(end)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS SegmentLabel (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, start INTEGER NOT NULL, end INTEGER NOT NULL, type TEXT NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_SegmentLabel_start ON SegmentLabel(start)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_SegmentLabel_end ON SegmentLabel(end)")
+    }
+}

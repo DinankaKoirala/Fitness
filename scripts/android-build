@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$project_root"
+if [[ -x "$project_root/.toolchain/jdk/bin/java" ]]; then
+    export JAVA_HOME="$project_root/.toolchain/jdk"
+fi
+if [[ -d "$project_root/.toolchain/android" ]]; then
+    export ANDROID_HOME="$project_root/.toolchain/android"
+fi
+export GRADLE_USER_HOME="$project_root/.toolchain/gradle"
+exec ./gradlew "$@"

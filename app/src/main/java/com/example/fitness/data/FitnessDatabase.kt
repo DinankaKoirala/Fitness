@@ -9,18 +9,19 @@ import androidx.room.RoomDatabase
     entities = [UserProfile::class, Food::class, MealEntry::class, StepDay::class,
         LocationPoint::class, Segment::class, Exercise::class, Routine::class,
         Workout::class, SetEntry::class, WeightEntry::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class FitnessDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
+    abstract fun foodDao(): FoodDao
 
     companion object {
-        fun create(context: Context): FitnessDatabase = Room.databaseBuilder(
+        fun create(context: Context, name: String = "fitness.db"): FitnessDatabase = Room.databaseBuilder(
             context.applicationContext,
             FitnessDatabase::class.java,
-            "fitness.db",
-        ).build()
+            name,
+        ).addMigrations(MIGRATION_1_2).build()
         // No destructive fallback. Every future version must supply an explicit,
         // tested Migration and preserve existing user data. See schemas/README.md.
     }

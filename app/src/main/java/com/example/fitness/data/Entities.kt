@@ -55,6 +55,18 @@ data class Food(
     val updatedAt: Long = createdAt,
 )
 
+// Immutable values used for a logged meal; saved-food edits never rewrite history.
+data class FoodSnapshot(
+    val name: String,
+    val servingAmount: Double,
+    val servingUnit: String,
+    val source: FoodSource,
+    val estimated: Boolean,
+    @Embedded val nutrients: Nutrients,
+)
+
+fun Food.snapshot() = FoodSnapshot(name, servingAmount, servingUnit, source, estimated, nutrients)
+
 @Entity(
     foreignKeys = [ForeignKey(entity = Food::class, parentColumns = ["id"], childColumns = ["foodId"], onDelete = ForeignKey.RESTRICT)],
     indices = [Index("foodId"), Index("date"), Index("createdAt")],
@@ -68,6 +80,7 @@ data class MealEntry(
     val unit: String,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
+    @Embedded(prefix = "snapshot_") val snapshot: FoodSnapshot? = null,
 )
 
 @Entity(indices = [Index("createdAt")])

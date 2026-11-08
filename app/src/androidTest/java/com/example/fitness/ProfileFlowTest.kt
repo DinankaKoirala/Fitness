@@ -49,6 +49,7 @@ class ProfileFlowTest {
     @Test fun onboardingOverrideEditingRestorationAndNavigation() {
         scenario = ActivityScenario.launch(MainActivity::class.java)
         waitForTag("height")
+        compose.onNodeWithTag("openSettings").assertExists()
         compose.onNodeWithTag("saveProfile").performScrollTo().performClick()
         compose.onNodeWithTag("profileMessage").performScrollTo().assertTextContains("height", substring = true)
         fillProfile()

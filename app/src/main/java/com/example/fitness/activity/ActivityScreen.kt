@@ -46,7 +46,8 @@ fun StepsCard(date: String) {
     val enabled by settings.stepsEnabled.collectAsStateWithLifecycle(initialValue = false)
     val trackingError by settings.error.collectAsStateWithLifecycle(initialValue = null)
     val flow = remember(date) { app.steps.observeDay(date) }
-    val day by flow.collectAsStateWithLifecycle(initialValue = null)
+    val observedDay by flow.collectAsStateWithLifecycle(initialValue = null)
+    val day = observedDay?.takeIf { it.date == date }
     val available = remember { context.getSystemService(SensorManager::class.java).getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null }
     val scope = rememberCoroutineScope()
     var error by rememberSaveable { mutableStateOf<String?>(null) }
@@ -73,7 +74,7 @@ fun StepsCard(date: String) {
             if (day?.estimated == true) Text("Estimated day split · editable")
             Text("Counts begin when tracking is enabled. A daily split after a gap may be estimated; correct it below.")
             if (!available) Text("No step-counter sensor is available on this device. You can enter a total manually.")
-            Button(enabled = available && !busy, onClick = {
+            Button(enabled = (enabled || available) && !busy, onClick = {
                 if (enabled) scope.launch { settings.stepsEnabled(false); context.stopService(Intent(context, StepService::class.java)) }
                 else {
                     val needed = buildList {

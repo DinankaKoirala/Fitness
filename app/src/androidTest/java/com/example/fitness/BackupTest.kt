@@ -45,25 +45,36 @@ class BackupTest {
     @Test fun fullBackupFreshDatabaseRoundTripAndInterruptedRecovery() = runBlocking {
         val source = FitnessDatabase.create(context, "backup-source-test.db")
         val target = FitnessDatabase.create(context, "backup-target-test.db")
+        val media = java.io.File(context.cacheDir, "backup-media-test").apply { mkdirs() }
+        val isolated = object : android.content.ContextWrapper(context) {
+            override fun getFilesDir() = media
+            override fun getNoBackupFilesDir() = java.io.File(media, "journals").apply { mkdirs() }
+        }
+        val imageName = "${java.util.UUID.randomUUID()}.jpg"
+        val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
         val oldSettings = readSettings(context)
         try {
             fixture(source)
+            val image = java.io.File(media, "ai_images/$imageName").apply { parentFile!!.mkdirs(); writeBytes(imageBytes) }
+            source.openHelper.writableDatabase.execSQL("UPDATE QueuedAiRequest SET imagePath = ?", arrayOf(imageName))
             writeSettings(context, JSONObject().put("manual_calorie_goal_kcal", 2200).put("battery_saver", true))
-            val out = ByteArrayOutputStream(); BackupManager(context, source).export(out)
+            val out = ByteArrayOutputStream(); BackupManager(isolated, source).export(out)
             assertFalse(out.toString("UTF-8").contains("provider_keys"))
             writeSettings(context, JSONObject().put("manual_calorie_goal_kcal", 999))
-            val manager = BackupManager(context, target) { error("Simulated process interruption after DB commit") }
+            val manager = BackupManager(isolated, target) { error("Simulated process interruption after DB commit") }
             val stage = manager.stage(out.toByteArray().inputStream())
             assertEquals(1L, stage.counts["MealEntry"])
             try { manager.restore(stage); fail("Expected injected failure") } catch (_: IllegalStateException) { }
-            BackupManager(context, target).recover()
+            image.delete()
+            BackupManager(isolated, target).recover()
+            assertArrayEquals(imageBytes, java.io.File(media, "ai_images/$imageName").readBytes())
             assertEquals(2200, readSettings(context).getInt("manual_calorie_goal_kcal"))
-            val restored = ByteArrayOutputStream(); BackupManager(context, target).export(restored)
+            val restored = ByteArrayOutputStream(); BackupManager(isolated, target).export(restored)
             val before = JSONObject(out.toString("UTF-8")); val after = JSONObject(restored.toString("UTF-8"))
             assertEquals(before.getJSONArray("tables").toString(), after.getJSONArray("tables").toString())
             assertEquals(before.getJSONObject("settings").toString(), after.getJSONObject("settings").toString())
             assertEquals(200.0, target.foodDao().entry(1)!!.snapshot!!.nutrients.caloriesKcal * 0.5, 0.0)
-        } finally { writeSettings(context, oldSettings); source.close(); target.close(); context.deleteDatabase("backup-source-test.db"); context.deleteDatabase("backup-target-test.db") }
+        } finally { writeSettings(context, oldSettings); source.close(); target.close(); media.deleteRecursively(); context.deleteDatabase("backup-source-test.db"); context.deleteDatabase("backup-target-test.db") }
     }
     @Test fun corruptBackupRejectedAndCsvGpxRespectContentAndRange() = runBlocking {
         val db = FitnessDatabase.create(context, "backup-format-test.db")
@@ -94,4 +105,25 @@ class BackupTest {
             assertEquals(1, factory.newDocumentBuilder().parse(clipped.toByteArray().inputStream()).getElementsByTagNameNS("http://www.topografix.com/GPX/1/1", "trkpt").length)
         } finally { db.close(); context.deleteDatabase("backup-format-test.db") }
     }
+    @Test fun storageFailureRollsBackReplacementAndRetainsPreviousSettings() = runBlocking {
+        val source = FitnessDatabase.create(context, "backup-fail-source.db")
+        val target = FitnessDatabase.create(context, "backup-fail-target.db")
+        val old = readSettings(context)
+        try {
+            fixture(source)
+            target.openHelper.writableDatabase.execSQL("INSERT INTO WeightEntry VALUES (1, '2026-01-01', 85, 1, 1)")
+            val out = ByteArrayOutputStream(); BackupManager(context, source).export(out)
+            writeSettings(context, JSONObject().put("manual_calorie_goal_kcal", 1800))
+            val manager = BackupManager(context, target, beforeCommit = { throw android.database.sqlite.SQLiteFullException("Injected disk full") })
+            val stage = manager.stage(out.toByteArray().inputStream())
+            try { manager.restore(stage); fail("Expected disk-full simulation") } catch (_: android.database.sqlite.SQLiteFullException) { }
+            BackupManager(context, target).recover()
+            target.openHelper.readableDatabase.query("SELECT date, weightKg FROM WeightEntry").use { c ->
+                assertTrue(c.moveToFirst()); assertEquals("2026-01-01", c.getString(0)); assertEquals(85.0, c.getDouble(1), 0.0); assertFalse(c.moveToNext())
+            }
+            assertEquals(1800, readSettings(context).getInt("manual_calorie_goal_kcal"))
+            assertNull(target.foodDao().entry(1))
+        } finally { writeSettings(context, old); source.close(); target.close(); context.deleteDatabase("backup-fail-source.db"); context.deleteDatabase("backup-fail-target.db") }
+    }
+
 }

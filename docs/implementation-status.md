@@ -23,7 +23,11 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 8: software verified; keyed provider/physical camera acceptance pending; docs/phase-8.md.
 - Phase 9: software verified; docs/phase-9.md.
 - Phase 10: software verified; 33 JVM tests, 24 Android 35 emulator tests, lint zero errors; docs/phase-10.md.
-- Phase 11: in progress.
+- Phase 11: software verified; docs/phase-11.md. Final build, 33 JVM tests,
+  26 Android 35 emulator tests and lint (0 errors) passed. An additional 3-test
+  offline run passed food, Swiss lookup and gym flows with airplane mode on / GPS
+  disabled. Physical battery/Xiaomi, provider-key and cross-device file-picker
+  acceptance remain pending; no blanket hardware acceptance is claimed.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require

@@ -11,9 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.fitness.backup.BackupCard
+import com.example.fitness.settings.SettingsButton
 import com.example.fitness.trends.TrendsButton
-import com.example.fitness.core.ProviderKeysCard
 import com.example.fitness.data.ProfileRepository
 import com.example.fitness.data.ProfileState
 import kotlinx.coroutines.CancellationException
@@ -43,6 +42,7 @@ fun ProfileScreen(state: ProfileState, repository: ProfileRepository, onboarding
         Text(if (onboarding) "Add your details to estimate a daily calorie goal. You can edit everything later."
              else "Your details and daily goal. Changes stay on this device.",
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (onboarding) SettingsButton()
         OutlinedTextField(
             value = height, onValueChange = { height = it; message = null },
             label = { Text("Height (cm)") }, singleLine = true, enabled = !saving,
@@ -138,8 +138,7 @@ fun ProfileScreen(state: ProfileState, repository: ProfileRepository, onboarding
             }, modifier = Modifier.fillMaxWidth().testTag("restoreEstimate")) { Text("Use estimated goal") }
             goalMessage?.let { Text(it, modifier = Modifier.testTag("goalMessage")) }
             TrendsButton()
-            ProviderKeysCard()
-            BackupCard()
+            SettingsButton()
         }
 
     }

@@ -32,21 +32,25 @@ class FitnessApplication : Application() {
     private val storageState = MutableStateFlow(StorageState())
     val storage: StateFlow<StorageState> = storageState
     private val recovering = AtomicBoolean(false)
+    @Volatile private var needsProfileRefresh = false
     fun clearStorageNotice() { storageState.value = storageState.value.copy(notice = null) }
     fun retryStorage() {
         if (!recovering.compareAndSet(false, true)) return
         storageState.value = StorageState()
         applicationScope.launch {
-            try { database.openHelper.writableDatabase; BackupManager(this@FitnessApplication, database).recover(); storageState.value = StorageState(loading = false) }
+            try { database.openHelper.writableDatabase; BackupManager(this@FitnessApplication, database).recover(); if (needsProfileRefresh) { profiles.refreshAfterRestore(); needsProfileRefresh = false }; storageState.value = StorageState(loading = false) }
             catch (_: Exception) { storageState.value = StorageState(loading = false, error = "Could not open or recover local data. Free storage and try again; existing files are retained.") }
             finally { recovering.set(false) }
         }
     }
     fun restoreBackup(stage: StagedBackup) {
+        needsProfileRefresh = true
         storageState.value = StorageState()
         applicationScope.launch {
             try {
                 BackupManager(this@FitnessApplication, database).restore(stage)
+                profiles.refreshAfterRestore()
+                needsProfileRefresh = false
                 storageState.value = StorageState(loading = false, notice = "Backup restored. Tracking is off; re-enable it in Activity when ready.")
             } catch (_: Exception) {
                 if (!stage.handedOff) stage.discard(this@FitnessApplication)

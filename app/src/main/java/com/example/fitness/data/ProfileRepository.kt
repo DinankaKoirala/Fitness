@@ -2,6 +2,7 @@ package com.example.fitness.data
 
 import com.example.fitness.profile.CalorieGoal
 import com.example.fitness.profile.ProfileInput
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -30,10 +31,22 @@ class ProfileRepository(
     val state: StateFlow<ProfileState> = reload.flatMapLatest {
         combine(dao.observeProfile(), settings.override) { profile, manual ->
             ProfileState(loading = false, profile = profile, manualGoal = manual)
-        }.catch { emit(ProfileState(loading = false, error = "Could not load your profile and goals. Try again.")) }
+        }.onStart { emit(ProfileState()) }.catch { emit(ProfileState(loading = false, error = "Could not load your profile and goals. Try again.")) }
     }.stateIn(scope, SharingStarted.WhileSubscribed(5_000), ProfileState())
 
     fun retry() { reload.value += 1 }
+
+    suspend fun refreshAfterRestore() {
+        val expectedProfile = dao.getProfile()
+        val expectedGoal = settings.override.first()
+        retry()
+        withTimeout(15_000) {
+            state.first {
+                check(it.error == null) { "Could not refresh restored profile." }
+                !it.loading && it.profile == expectedProfile && it.manualGoal == expectedGoal
+            }
+        }
+    }
 
     suspend fun saveProfile(input: ProfileInput) = saveMutex.withLock {
         val old = dao.getProfile()

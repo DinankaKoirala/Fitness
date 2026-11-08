@@ -1,83 +1,91 @@
 # Fitness
 
-Android-only, offline-first fitness tracker. **Phases 0 and 1 complete**: a dark
-Material 3 shell, profile onboarding, editable measurements, estimated daily
-calorie goals and a persistent manual override. The Food header displays the
-active goal. Activity and Gym remain placeholders. Phase 2 and later are unstarted. No network permission, tracking services, analytics, backend,
-or cloud backup. Device backup is disabled in the manifest.
+Android-only, offline-first fitness tracker built with Kotlin and Jetpack Compose.
+The software implementation covers Phases 0–11 of the supplied plan. Physical
+battery/OEM acceptance and account-keyed integrations remain explicitly unverified;
+see [verification and release checks](docs/phase-11.md).
 
-## Build and run
+## Use the app
 
-Use JDK 17 and Android SDK Platform 35 / Build Tools 35.0.0. Open this directory
-in Android Studio, set your SDK location in `local.properties`, and run `app`.
-Alternatively, set `ANDROID_HOME` and run:
+Install [the debug APK](app/build/outputs/apk/debug/app-debug.apk) on Android 8+
+and complete profile onboarding, or restore an existing backup from onboarding’s
+Settings button. Measurements are metric. The four tabs provide:
+
+- **Food:** daily calorie/macro/micronutrient totals, editable meal logs, saved
+  foods, offline Swiss search, barcode/label scanning, optional remote food
+  databases and Gemini text/photo estimates. Logged meals preserve their original
+  nutrition when saved foods change. Unknown micros remain unknown.
+- **Activity:** opt-in steps and GPS recording, manual step correction, editable
+  motion classifications, Day/Week/Custom statistics and street maps. Satellite
+  and elevation-based terrain require a MapTiler key. Sensor availability varies.
+- **Gym:** 876 bundled exercises, custom exercises, ordered routines, sessions,
+  rest timers, sets, previous sessions, PRs and workout history.
+- **Profile:** editable measurements and calorie goals, inspectable trend charts,
+  weight history and **Settings, backup and export**.
+
+Settings holds encrypted provider keys, lookup mode, GPS battery saver, licenses,
+full JSON backup/restore and date-range CSV/GPX exports. File operations use the
+Android file picker without storage permissions. JSON backups are plaintext
+personal data; choose the destination accordingly. Restore validates before
+replacement, excludes keys/permissions and leaves tracking off.
+
+Enable tracking from Activity and follow the permission/battery guidance. It is
+optional; manual logging works without tracking permissions. Recording uses
+persistent notifications with Stop actions. Android and OEM settings can stop
+services; real-device validation is still required.
+
+## Privacy and estimates
+
+No account, backend, analytics or cloud sync. Automatic Android backup is disabled.
+All app HTTP passes through a foreground gate and is cancelled when the app stops
+being visible. Map tiles and explicit provider searches use the internet. AI
+requests queue locally and retry only through an explicit foreground action on
+Wi-Fi/charging. Free-tier Gemini content may be used by Google; the UI discloses
+this before use. Keys use Android Keystore encryption and are excluded from
+exports, saved UI state and authenticated response caches.
+
+Calories, automatic motion labels, OCR and AI nutrition are estimates and editable.
+Offline OCR uses bundled Tesseract and barcode decoding uses ZXing. The planned
+ML Kit integration was replaced because its documented analytics conflict with
+the plan's privacy requirement. Optional Health Connect import is deferred.
+
+## Build and verify
+
+Use JDK 17, Android SDK Platform 35 and Build Tools 35.0.0. Set `ANDROID_HOME` or
+`local.properties`, then run:
 
 ```sh
-./gradlew assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest
+./gradlew assembleDebug testDebugUnitTest lintDebug
 ./gradlew connectedDebugAndroidTest
 ```
 
-The second command requires a connected device or running emulator (API 26+).
-The APK is `app/build/outputs/apk/debug/app-debug.apk`. Gradle downloads the
-pinned build dependencies on the first build; the app itself uses no network.
+In this workspace `./scripts/android-build` selects the installed ignored local
+toolchain. The second command requires a running emulator or connected device.
+Dependencies download at build time. Debug APK output is
+`app/build/outputs/apk/debug/app-debug.apk`; this is a development build, not a
+signed store release. Temporary app ID: `com.example.fitness`; min API 26,
+compile/target API 35.
 
-## Confirmed choices
+Room schema 7 has explicit migrations from schema 1; no destructive fallback.
+Events use UTC epoch milliseconds, calendar records ISO local dates. SQLite
+transactions preserve fitness data; a durable restore journal coordinates database,
+preferences and queued images after interruption.
 
-- Minimum API 26; compile/target API 35; temporary ID `com.example.fitness`.
-- One `app` module; packages: `food`, `activity`, `gym`, `profile`, `data`, `core`.
-- Measurements use kg, cm, metres, m/s. Dates are local ISO calendar dates;
-  event timestamps are UTC epoch milliseconds. Records have creation timestamps;
-  mutable records also have update timestamps.
-- Room schema version 1 contains all 11 entities from the supplied plan. Meal and
-  workout relationships use foreign keys and indexes. Unknown micros are null.
-- Database creation runs off the main thread on application launch. Tab selection
-  survives activity recreation. No production sample fitness values are displayed or seeded.
+## Implementation and dependencies
 
-## Dependencies
+[Implementation status](docs/implementation-status.md) links phase evidence.
+[Phase 10](docs/phase-10.md) describes backup format and recovery.
+[Phase 11](docs/phase-11.md) records final checks and physical test procedures.
+[Schema policy](app/schemas/README.md) covers migrations.
 
-Compose UI / Material 3 provide the UI and theme; Activity Compose hosts it.
-Room runtime stores local records; KSP plus Room compiler generate and validate
-its schema. Compose BOM aligns UI artifacts. AndroidX Test and Compose UI Test
-are test-only dependencies for navigation, recreation and persistent DB checks.
-No navigation, DI, icon, networking or chart library is needed for four tabs.
+Runtime libraries: AndroidX Compose/Material, Room, DataStore, Lifecycle, coroutines,
+Play services Activity Recognition, MapLibre Native and bundled MapLibre GL JS for
+terrain, OkHttp, CameraX, Tesseract4Android and ZXing. Charts use Compose Canvas;
+no chart, analytics or background network scheduler library. Libraries and bundled
+data have notices in [licenses](licenses), app assets and the Settings viewer.
+Swiss data: FSVO Swiss Food Composition Database v7.1; exercises:
+yuhonas/free-exercise-db (Unlicense).
 
-Schema exports and the migration policy live in [app/schemas](app/schemas/README.md).
-Future schema versions must use tested, explicit migrations; destructive fallback
-is prohibited. The profile DAO is implemented; other feature DAOs will be added as needed.
-
-## Scope and open questions
-
-Phase 2 and beyond are not started. Before their respective phases:
-
-- Choose final application ID before distribution.
-- Define routine exercise ordering / targets in Phase 7.
-- Decide whether food logs snapshot nutrition to preserve historical totals after
-  editing a saved food in Phase 2.
-- Phase 1 uses Male/Female equation inputs and five activity levels; these are
-  stored by enum name in the existing string columns.
-
-Reasoning preference: medium for ordinary phases; high for Phase 4 (background
-location) and Phase 5 (classification). Each phase requires a separate instruction
-to begin.
-
-Navigation icons are bundled Material Design vector paths (Google, Apache 2.0);
-see [their license](licenses/material-icons-LICENSE.txt). The launcher icon is a
-simple project-local vector.
-
-The local verification toolchain remains in `.toolchain/` (not committed). To
-reuse it in this workspace:
-
-```sh
-JAVA_HOME="$PWD/.toolchain/jdk" ANDROID_HOME="$PWD/.toolchain/android" \
-GRADLE_USER_HOME="$PWD/.toolchain/gradle" ./gradlew assembleDebug
-```
-
-See [Phase 0 results](docs/phase-0.md) and [Phase 1 results and open questions](docs/phase-1.md).
-
-Phase 1 profile measurements and the calculated goal live in Room. The manual
-calorie override lives in Preferences DataStore and survives profile edits until
-explicitly removed. Calculated goals are labeled estimated. Lifecycle Runtime
-Compose collects settings and profile updates while the UI is active; Coroutines
-Android provides asynchronous persistence. JUnit is used only by JVM tests.
-The user authorizes routine implementation choices within the active phase
-without further confirmation.
+Remaining decisions before distribution: final application ID/signing, user API
+keys/provider billing choices, physical Xiaomi acceptance and measured full-day
+battery usage. No remote repository push or publication is performed.

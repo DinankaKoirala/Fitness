@@ -8,7 +8,9 @@ For a future schema change:
 1. Increment FitnessDatabase.version.
 2. Supply an explicit Migration(from, to) to the builder using addMigrations.
 3. Keep every prior JSON snapshot and commit the newly generated snapshot.
-4. Use Room MigrationTestHelper to validate the migration with existing user data.
+4. Validate the migration using prior exported snapshots and populated records,
+   then open with Room to validate the resulting schema. Use MigrationTestHelper
+   when adding separate migration fixtures.
 
 Never use fallbackToDestructiveMigration. Missing migration paths must fail rather
 than silently erase data. Updates must explicitly set updatedAt; constructor
@@ -17,5 +19,9 @@ values apply only when a record is first constructed.
 Dates are device-local ISO dates; event timestamps are UTC epoch milliseconds.
 Queries over event times should use half-open ranges [from, to).
 Food micros are nullable so unknown values aren't treated as measured zero.
-Routine-to-exercise ordering and food-log nutrition snapshots are deferred schema
-questions for their respective phases; no later-phase workflows are implemented.
+Schema history: v2 adds immutable meal nutrition snapshots; v3 sensor baseline and
+estimated day splits; v4 step intervals and editable segment labels; v5 ordered
+routine/workout exercise memberships; v6 queued AI drafts; v7 restore checkpoint.
+The Android regression suite builds a populated v1 database from its exported
+snapshot and opens it through the complete explicit migration chain, verifying
+preserved records and the current Room schema. Keep all snapshots 1–7.

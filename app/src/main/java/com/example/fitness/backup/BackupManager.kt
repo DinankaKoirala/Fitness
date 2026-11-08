@@ -20,7 +20,7 @@ class StagedBackup internal constructor(val token: String, val databaseName: Str
     fun discard(context: Context) { database.close(); context.deleteDatabase(databaseName); folder.deleteRecursively() }
 }
 
-class BackupManager(private val context: Context, private val database: FitnessDatabase, private val afterCommit: (() -> Unit)? = null) {
+class BackupManager(private val context: Context, private val database: FitnessDatabase, private val beforeCommit: (() -> Unit)? = null, private val afterCommit: (() -> Unit)? = null) {
     private val journal get() = AtomicFile(File(context.noBackupFilesDir, "restore-journal.json"))
     private val imageFolder get() = File(context.filesDir, "ai_images").apply { mkdirs() }
     private fun imageName(value: String): String { require(value.matches(Regex("[a-fA-F0-9-]+\\.jpg"))); return value }
@@ -150,6 +150,7 @@ class BackupManager(private val context: Context, private val database: FitnessD
                         }
                     }
                 }
+                beforeCommit?.invoke()
                 checkData(target)
                 target.execSQL("INSERT OR REPLACE INTO RestoreCheckpoint (id, token, createdAt) VALUES (1, ?, ?)", arrayOf<Any>(stage.token, System.currentTimeMillis()))
             }

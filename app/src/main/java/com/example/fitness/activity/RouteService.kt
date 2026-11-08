@@ -23,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.math.*
 
 class RouteService : Service(), LocationListener, SensorEventListener {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, _ -> stopping = true; stopGps(); stopSelf() })
     private val settings by lazy { ActivitySettings(this) }
     private val database get() = (application as FitnessApplication).database
     private lateinit var locations: LocationManager
@@ -76,7 +76,7 @@ class RouteService : Service(), LocationListener, SensorEventListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "stop") {
-            scope.launch { stopping = true; settings.routeEnabled(false); stopGps(); flush(); stopSelf() }
+            scope.launch { stopping = true; stopGps(); try { settings.routeEnabled(false); flush() } finally { stopSelf() } }
             return START_NOT_STICKY
         }
         if (!hasLocation(this)) { stopWithError("Location permission is missing."); return START_NOT_STICKY }
@@ -164,18 +164,17 @@ class RouteService : Service(), LocationListener, SensorEventListener {
         catch (failure: Exception) {
             if (failure is CancellationException) throw failure
             buffer.addAll(0, batch)
-            settings.routeError("Could not save route points. Check free storage; recording is paused.")
             stopGps()
             stopping = true
-            settings.routeEnabled(false)
-            stopSelf()
+            try { settings.routeEnabled(false); settings.routeError("Could not save route points. Check free storage; recording is paused.") }
+            finally { stopSelf() }
         }
     }
     override fun onProviderDisabled(provider: String) { scope.launch { settings.routeError("GPS is off. Enable device location to resume recording.") } }
     override fun onProviderEnabled(provider: String) { scope.launch { settings.routeError(null) } }
     @Deprecated("Platform callback") override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     private fun stopWithError(message: String) {
-        scope.launch { stopping = true; stopGps(); settings.routeEnabled(false); settings.routeError(message); flush(); stopSelf() }
+        scope.launch { stopping = true; stopGps(); try { settings.routeEnabled(false); settings.routeError(message); flush() } finally { stopSelf() } }
     }
     override fun onDestroy() {
         stopGps()

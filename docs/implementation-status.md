@@ -15,7 +15,8 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 0: complete; docs/phase-0.md.
 - Phase 1: complete; docs/phase-1.md.
 - Phase 2: complete; docs/phase-2.md.
-- Phases 3–11: pending.
+- Phase 3: complete (sensor/manual implementation; physical validation pending); docs/phase-3.md.
+- Phases 4–11: pending.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require

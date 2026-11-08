@@ -1,0 +1,28 @@
+[versions]
+agp = "8.9.2"
+kotlin = "2.1.20"
+ksp = "2.1.20-1.0.32"
+compose-bom = "2025.05.01"
+activity = "1.10.1"
+room = "2.7.2"
+test-runner = "1.6.2"
+test-junit = "1.2.1"
+
+[libraries]
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+test-runner = { module = "androidx.test:runner", version.ref = "test-runner" }
+test-junit = { module = "androidx.test.ext:junit", version.ref = "test-junit" }
+compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

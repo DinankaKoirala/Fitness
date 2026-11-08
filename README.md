@@ -1,9 +1,9 @@
 # Fitness
 
-Android-only, offline-first fitness tracker. **Phase 0 only**: a dark Material 3
-shell with Food, Activity, Gym and Profile tabs, plus the initial Room database.
-Screens are deliberately empty except for their titles. No later-phase features
-or libraries are included. No network permission, tracking services, analytics, backend,
+Android-only, offline-first fitness tracker. **Phases 0 and 1 complete**: a dark
+Material 3 shell, profile onboarding, editable measurements, estimated daily
+calorie goals and a persistent manual override. The Food header displays the
+active goal. Activity and Gym remain placeholders. Phase 2 and later are unstarted. No network permission, tracking services, analytics, backend,
 or cloud backup. Device backup is disabled in the manifest.
 
 ## Build and run
@@ -13,7 +13,7 @@ in Android Studio, set your SDK location in `local.properties`, and run `app`.
 Alternatively, set `ANDROID_HOME` and run:
 
 ```sh
-./gradlew assembleDebug lintDebug assembleDebugAndroidTest
+./gradlew assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest
 ./gradlew connectedDebugAndroidTest
 ```
 
@@ -31,7 +31,7 @@ pinned build dependencies on the first build; the app itself uses no network.
 - Room schema version 1 contains all 11 entities from the supplied plan. Meal and
   workout relationships use foreign keys and indexes. Unknown micros are null.
 - Database creation runs off the main thread on application launch. Tab selection
-  survives activity recreation. No sample fitness values are displayed or seeded.
+  survives activity recreation. No production sample fitness values are displayed or seeded.
 
 ## Dependencies
 
@@ -43,18 +43,18 @@ No navigation, DI, icon, networking or chart library is needed for four tabs.
 
 Schema exports and the migration policy live in [app/schemas](app/schemas/README.md).
 Future schema versions must use tested, explicit migrations; destructive fallback
-is prohibited. Feature DAOs will be added with the workflows that need them.
+is prohibited. The profile DAO is implemented; other feature DAOs will be added as needed.
 
 ## Scope and open questions
 
-Phase 1 and beyond are not started. Before their respective phases:
+Phase 2 and beyond are not started. Before their respective phases:
 
 - Choose final application ID before distribution.
 - Define routine exercise ordering / targets in Phase 7.
 - Decide whether food logs snapshot nutrition to preserve historical totals after
   editing a saved food in Phase 2.
-- Confirm sex / activity-level options during Phase 1; these are plain strings in
-  the initial schema rather than preemptively fixing onboarding choices.
+- Phase 1 uses Male/Female equation inputs and five activity levels; these are
+  stored by enum name in the existing string columns.
 
 Reasoning preference: medium for ordinary phases; high for Phase 4 (background
 location) and Phase 5 (classification). Each phase requires a separate instruction
@@ -72,4 +72,12 @@ JAVA_HOME="$PWD/.toolchain/jdk" ANDROID_HOME="$PWD/.toolchain/android" \
 GRADLE_USER_HOME="$PWD/.toolchain/gradle" ./gradlew assembleDebug
 ```
 
-See [Phase 0 results and open questions](docs/phase-0.md).
+See [Phase 0 results](docs/phase-0.md) and [Phase 1 results and open questions](docs/phase-1.md).
+
+Phase 1 profile measurements and the calculated goal live in Room. The manual
+calorie override lives in Preferences DataStore and survives profile edits until
+explicitly removed. Calculated goals are labeled estimated. Lifecycle Runtime
+Compose collects settings and profile updates while the UI is active; Coroutines
+Android provides asynchronous persistence. JUnit is used only by JVM tests.
+The user authorizes routine implementation choices within the active phase
+without further confirmation.

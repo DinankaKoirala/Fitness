@@ -85,6 +85,7 @@ fun ActivityRanges(selectedDate: String, onDate: (String) -> Unit) {
                     Text("Average ${displayNumber(stats.averageSpeed * 3.6)} km/h · Max ${displayNumber(stats.maxSpeed * 3.6)} km/h")
                     Text("${stats.observedMs / 60_000} observed minutes. Gaps over 3 minutes are excluded. Average speed uses recorded moving time.")
                     Text("Classification is estimated from speed and step cadence. Tap a segment to correct it; corrections persist for that time interval.", style = MaterialTheme.typography.bodySmall)
+                    RouteMap(state)
                     if (state.segments.isEmpty()) Text("No recorded route in this range.")
                     state.segments.forEach { segment ->
                         TextButton(onClick = { editing = segment; error = null }, modifier = Modifier.testTag("classify_${segment.start}_${segment.end}")) {

@@ -9,6 +9,8 @@ datastore = "1.1.7"
 lifecycle = "2.8.7"
 coroutines = "1.9.0"
 play-location = "21.3.0"
+maplibre = "12.0.1"
+okhttp = "4.12.0"
 junit = "4.13.2"
 test-runner = "1.6.2"
 test-junit = "1.2.1"
@@ -32,6 +34,9 @@ coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-androi
 junit = { module = "junit:junit", version.ref = "junit" }
 
 play-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-location" }
+
+maplibre = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -21,12 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.example.fitness.core.FitnessTheme
+import com.example.fitness.core.ForegroundNetwork
 import com.example.fitness.food.FoodScreen
 import com.example.fitness.activity.ActivityScreen
 import com.example.fitness.gym.GymScreen
 import com.example.fitness.profile.ProfileScreen
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() { super.onStart(); ForegroundNetwork.enter() }
+    override fun onStop() { ForegroundNetwork.leave(); super.onStop() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(

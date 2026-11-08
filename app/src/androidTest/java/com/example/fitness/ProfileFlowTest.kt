@@ -3,6 +3,7 @@ package com.example.fitness
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
+import androidx.room.withTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.fitness.data.*
@@ -20,14 +21,14 @@ class ProfileFlowTest {
     private var scenario: ActivityScenario<MainActivity>? = null
 
     @Before fun reset() = runBlocking(Dispatchers.IO) {
-        app.database.openHelper.writableDatabase.execSQL("DELETE FROM UserProfile")
+        app.database.withTransaction { app.database.openHelper.writableDatabase.execSQL("DELETE FROM UserProfile") }
         GoalSettings(app.goalDataStore).setOverride(null)
     }
 
     @After fun cleanUp() {
         scenario?.close()
         runBlocking(Dispatchers.IO) {
-            app.database.openHelper.writableDatabase.execSQL("DELETE FROM UserProfile")
+            app.database.withTransaction { app.database.openHelper.writableDatabase.execSQL("DELETE FROM UserProfile") }
             GoalSettings(app.goalDataStore).setOverride(null)
         }
     }

@@ -14,6 +14,8 @@ import com.example.fitness.data.ProfileRepository
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import com.example.fitness.data.FoodRepository
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -31,12 +33,12 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
-        setContent { FitnessTheme { FitnessApp((application as FitnessApplication).profiles) } }
+        setContent { FitnessTheme { FitnessApp((application as FitnessApplication).profiles, (application as FitnessApplication).foods) } }
     }
 }
 
 @Composable
-fun FitnessApp(repository: ProfileRepository) {
+fun FitnessApp(repository: ProfileRepository, foods: FoodRepository) {
     val state by repository.state.collectAsStateWithLifecycle()
     if (state.loading || state.error != null) {
         Surface(Modifier.fillMaxSize()) {
@@ -58,6 +60,7 @@ fun FitnessApp(repository: ProfileRepository) {
         return
     }
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    val tabStates = rememberSaveableStateHolder()
     val tabs = listOf("Food", "Activity", "Gym", "Profile")
     val icons = listOf(R.drawable.ic_food, R.drawable.ic_activity, R.drawable.ic_gym, R.drawable.ic_profile)
     Scaffold(bottomBar = {
@@ -74,11 +77,13 @@ fun FitnessApp(repository: ProfileRepository) {
         }
     }) { padding ->
         Surface(Modifier.padding(padding), color = MaterialTheme.colorScheme.background) {
+            tabStates.SaveableStateProvider(selected) {
             when (selected) {
-                0 -> FoodScreen(requireNotNull(state.goal), estimated = state.manualGoal == null)
+                0 -> FoodScreen(requireNotNull(state.goal), estimated = state.manualGoal == null, repository = foods)
                 1 -> ActivityScreen()
                 2 -> GymScreen()
                 3 -> ProfileScreen(state, repository)
+            }
             }
         }
     }

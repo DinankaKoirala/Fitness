@@ -17,7 +17,8 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 2: complete; docs/phase-2.md.
 - Phase 3: complete (sensor/manual implementation; physical validation pending); docs/phase-3.md.
 - Phase 4: software verified; full-day battery and Xiaomi acceptance pending; docs/phase-4.md.
-- Phases 5–11: pending.
+- Phase 5: software verified; docs/phase-5.md.
+- Phases 6–11: pending.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require

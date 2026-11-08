@@ -28,11 +28,11 @@ import kotlinx.coroutines.*
 
 @Composable
 fun ActivityScreen() {
-    var date by remember { mutableStateOf(LocalDate.now().toString()) }
-    LaunchedEffect(Unit) { while (true) { delay(60_000); date = LocalDate.now().toString() } }
+    var date by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Activity", style = MaterialTheme.typography.headlineLarge)
         Text(date)
+        ActivityRanges(date) { date = it }
         StepsCard(date)
         RouteControls()
     }

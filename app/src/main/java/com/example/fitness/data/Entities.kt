@@ -1,5 +1,6 @@
 package com.example.fitness.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -89,6 +90,7 @@ data class StepDay(
     val steps: Long,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
+    @ColumnInfo(defaultValue = "0") val estimated: Boolean = false,
 )
 
 @Entity(indices = [Index("timestamp")])
@@ -168,6 +170,17 @@ data class WeightEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val date: String,
     val weightKg: Double,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = createdAt,
+)
+
+@Entity
+data class StepCounterState(
+    @PrimaryKey val id: Long = 1,
+    val date: String,
+    val rawCounter: Long,
+    val bootCount: Int,
+    val eventTime: Long,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
 )

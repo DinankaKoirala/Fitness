@@ -19,3 +19,10 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("UPDATE MealEntry SET $values")
     }
 }
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE StepDay ADD COLUMN estimated INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("CREATE TABLE IF NOT EXISTS StepCounterState (id INTEGER NOT NULL, date TEXT NOT NULL, rawCounter INTEGER NOT NULL, bootCount INTEGER NOT NULL, eventTime INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id))")
+    }
+}

@@ -6,7 +6,11 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fitness.data.ProfileRepository
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -27,12 +31,32 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
-        setContent { FitnessTheme { FitnessApp() } }
+        setContent { FitnessTheme { FitnessApp((application as FitnessApplication).profiles) } }
     }
 }
 
 @Composable
-fun FitnessApp() {
+fun FitnessApp(repository: ProfileRepository) {
+    val state by repository.state.collectAsStateWithLifecycle()
+    if (state.loading || state.error != null) {
+        Surface(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                if (state.loading) CircularProgressIndicator()
+                else {
+                    Text(state.error.orEmpty())
+                    Button(onClick = repository::retry) { Text("Try again") }
+                }
+            }
+        }
+        return
+    }
+    if (state.profile == null) {
+        Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
+            ProfileScreen(state, repository, onboarding = true)
+        }
+        return
+    }
     var selected by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Food", "Activity", "Gym", "Profile")
     val icons = listOf(R.drawable.ic_food, R.drawable.ic_activity, R.drawable.ic_gym, R.drawable.ic_profile)
@@ -51,10 +75,10 @@ fun FitnessApp() {
     }) { padding ->
         Surface(Modifier.padding(padding), color = MaterialTheme.colorScheme.background) {
             when (selected) {
-                0 -> FoodScreen()
+                0 -> FoodScreen(requireNotNull(state.goal), estimated = state.manualGoal == null)
                 1 -> ActivityScreen()
                 2 -> GymScreen()
-                3 -> ProfileScreen()
+                3 -> ProfileScreen(state, repository)
             }
         }
     }

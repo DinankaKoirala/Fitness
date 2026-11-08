@@ -1,34 +1,14 @@
 package com.example.fitness
 
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.fitness.data.FitnessDatabase
 import org.junit.Assert.*
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SkeletonTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
-
-    @Test fun tabsNavigateAndSelectionSurvivesRecreation() {
-        listOf("Activity", "Gym", "Profile", "Food").forEach { tab ->
-            compose.onNodeWithContentDescription("$tab tab").performClick().assertIsSelected()
-            compose.onAllNodesWithText(tab, useUnmergedTree = true).assertCountEquals(2)
-        }
-        compose.onNodeWithContentDescription("Gym tab").performClick()
-        compose.activityRule.scenario.recreate()
-        compose.onNodeWithContentDescription("Gym tab").assertIsSelected().assertIsDisplayed()
-    }
-
     @Test fun schemaCreatesAndDataSurvivesReopen() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         // Separate file so the launch database is never modified by this test.

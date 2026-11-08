@@ -36,7 +36,19 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
-        setContent { FitnessTheme { FitnessApp((application as FitnessApplication).profiles, (application as FitnessApplication).foods) } }
+        setContent { FitnessTheme {
+            val app = application as FitnessApplication
+            val storage by app.storage.collectAsStateWithLifecycle()
+            if (storage.loading || storage.error != null) Surface(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), verticalArrangement = Arrangement.Center) {
+                    if (storage.loading) CircularProgressIndicator()
+                    else { Text(storage.error.orEmpty()); Button(onClick = app::retryStorage) { Text("Try recovery") } }
+                }
+            } else {
+                FitnessApp(app.profiles, app.foods)
+                storage.notice?.let { notice -> AlertDialog(onDismissRequest = app::clearStorageNotice, title = { Text("Restore complete") }, text = { Text(notice) }, confirmButton = { TextButton(onClick = app::clearStorageNotice) { Text("OK") } }) }
+            }
+        } }
     }
 }
 

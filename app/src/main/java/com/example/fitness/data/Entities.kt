@@ -231,3 +231,6 @@ data class QueuedAiRequest(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt,
 )
+
+@Entity
+data class RestoreCheckpoint(@PrimaryKey val id: Long = 1, val token: String, val createdAt: Long)

@@ -12,7 +12,12 @@ import com.example.fitness.data.goalDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import java.util.concurrent.Executors
+import com.example.fitness.backup.BackupManager
+import com.example.fitness.backup.StagedBackup
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import java.util.concurrent.atomic.AtomicBoolean
 
 class FitnessApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -23,12 +28,34 @@ class FitnessApplication : Application() {
     val profiles by lazy { ProfileRepository(database.profileDao(), GoalSettings(goalDataStore), applicationScope) }
     val database by lazy { FitnessDatabase.create(this) }
 
+    data class StorageState(val loading: Boolean = true, val error: String? = null, val notice: String? = null)
+    private val storageState = MutableStateFlow(StorageState())
+    val storage: StateFlow<StorageState> = storageState
+    private val recovering = AtomicBoolean(false)
+    fun clearStorageNotice() { storageState.value = storageState.value.copy(notice = null) }
+    fun retryStorage() {
+        if (!recovering.compareAndSet(false, true)) return
+        storageState.value = StorageState()
+        applicationScope.launch {
+            try { database.openHelper.writableDatabase; BackupManager(this@FitnessApplication, database).recover(); storageState.value = StorageState(loading = false) }
+            catch (_: Exception) { storageState.value = StorageState(loading = false, error = "Could not open or recover local data. Free storage and try again; existing files are retained.") }
+            finally { recovering.set(false) }
+        }
+    }
+    fun restoreBackup(stage: StagedBackup) {
+        storageState.value = StorageState()
+        applicationScope.launch {
+            try {
+                BackupManager(this@FitnessApplication, database).restore(stage)
+                storageState.value = StorageState(loading = false, notice = "Backup restored. Tracking is off; re-enable it in Activity when ready.")
+            } catch (_: Exception) {
+                if (!stage.handedOff) stage.discard(this@FitnessApplication)
+                storageState.value = StorageState(loading = false, error = "Restore could not finish. Stop tracking, free storage, then try recovery. Existing files are retained.")
+            }
+        }
+    }
     override fun onCreate() {
         super.onCreate()
-        // Force the initial schema creation off the main thread, even before any data is logged.
-        val executor = Executors.newSingleThreadExecutor()
-        executor.execute {
-            try { database.openHelper.writableDatabase } finally { executor.shutdown() }
-        }
+        retryStorage()
     }
 }

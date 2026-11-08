@@ -22,7 +22,8 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 7: software verified; docs/phase-7.md.
 - Phase 8: software verified; keyed provider/physical camera acceptance pending; docs/phase-8.md.
 - Phase 9: software verified; docs/phase-9.md.
-- Phases 10–11: pending.
+- Phase 10: software verified; 33 JVM tests, 24 Android 35 emulator tests, lint zero errors; docs/phase-10.md.
+- Phase 11: in progress.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require

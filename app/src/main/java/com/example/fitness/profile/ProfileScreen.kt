@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.fitness.backup.BackupCard
 import com.example.fitness.trends.TrendsButton
 import com.example.fitness.core.ProviderKeysCard
 import com.example.fitness.data.ProfileRepository
@@ -138,6 +139,7 @@ fun ProfileScreen(state: ProfileState, repository: ProfileRepository, onboarding
             goalMessage?.let { Text(it, modifier = Modifier.testTag("goalMessage")) }
             TrendsButton()
             ProviderKeysCard()
+            BackupCard()
         }
 
     }

@@ -59,3 +59,9 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_QueuedAiRequest_createdAt ON QueuedAiRequest(createdAt)")
     }
 }
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS RestoreCheckpoint (id INTEGER NOT NULL, token TEXT NOT NULL, createdAt INTEGER NOT NULL, PRIMARY KEY(id))")
+    }
+}

@@ -89,6 +89,9 @@ class TrackingBootReceiver : BroadcastReceiver() {
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val app = context.applicationContext as FitnessApplication
+                val storage = app.storage.first { !it.loading }
+                if (storage.error != null) return@launch
                 val enabled = ActivitySettings(context).stepsEnabled.first()
                 if (enabled && StepService.permitted(context)) StepService.start(context)
                 val route = ActivitySettings(context).routeEnabled.first()

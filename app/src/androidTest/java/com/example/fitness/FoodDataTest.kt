@@ -74,7 +74,7 @@ class FoodDataTest {
         }
         val database = FitnessDatabase.create(context, name)
         try {
-            assertEquals(6, database.openHelper.writableDatabase.version)
+            assertEquals(7, database.openHelper.writableDatabase.version)
             val snapshot = database.foodDao().entry(1)!!.snapshot!!
             assertEquals("Original", snapshot.name)
             assertEquals(100.0, snapshot.scaled(50.0, "g").caloriesKcal, 0.0)

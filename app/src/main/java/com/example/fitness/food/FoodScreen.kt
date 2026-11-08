@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitness.core.FitnessColors
+import com.example.fitness.food.lookup.LookupDialog
 import com.example.fitness.data.*
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -41,6 +42,7 @@ fun FoodScreen(goal: Int, estimated: Boolean, repository: FoodRepository) {
     var editingEntry by rememberSaveable(date) { mutableStateOf<Long?>(null) }
     var foodEditor by rememberSaveable(date) { mutableStateOf<Long?>(null) }
     var loggedEditor by rememberSaveable(date) { mutableStateOf<Long?>(null) }
+    var lookup by rememberSaveable(date) { mutableStateOf(false) }
     var deleting by rememberSaveable(date) { mutableStateOf<Long?>(null) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var deleteBusy by remember { mutableStateOf(false) }
@@ -124,6 +126,7 @@ fun FoodScreen(goal: Int, estimated: Boolean, repository: FoodRepository) {
         val entry = state.entries.find { it.id == editingEntry }
         val logged = state.entries.find { it.id == loggedEditor }
         when {
+            lookup -> LookupDialog(onClose = { lookup = false }) { id -> chosenFood = id; lookup = false }
             logged != null -> key("logged", logged.id) {
                 val snapshot = requireNotNull(logged.snapshot)
                 FoodEditor(Food(id = logged.foodId, name = snapshot.name, servingAmount = snapshot.servingAmount,
@@ -153,7 +156,7 @@ fun FoodScreen(goal: Int, estimated: Boolean, repository: FoodRepository) {
                 }
             }
             addingMeal != null -> FoodPicker(state.foods, state.recent, onClose = { addingMeal = null },
-                onChoose = { chosenFood = it }, onCreate = { foodEditor = 0L }, onEdit = { foodEditor = it })
+                onChoose = { chosenFood = it }, onCreate = { foodEditor = 0L }, onEdit = { foodEditor = it }, onLookup = { lookup = true })
         }
     }
     deleting?.let { id ->
@@ -211,10 +214,11 @@ private fun MicroCard(totals: NutritionTotals) {
 }
 
 @Composable
-private fun FoodPicker(foods: List<Food>, recent: List<Food>, onClose: () -> Unit, onChoose: (Long) -> Unit, onCreate: () -> Unit, onEdit: (Long) -> Unit) {
+private fun FoodPicker(foods: List<Food>, recent: List<Food>, onClose: () -> Unit, onChoose: (Long) -> Unit, onCreate: () -> Unit, onEdit: (Long) -> Unit, onLookup: () -> Unit) {
     var search by rememberSaveable { mutableStateOf("") }
     var recentOnly by rememberSaveable { mutableStateOf(false) }
     FoodDialog("Choose food", onClose = onClose) {
+        OutlinedButton(onClick = onLookup, modifier = Modifier.fillMaxWidth().testTag("openLookup")) { Text("Look up / scan food") }
         Button(onClick = onCreate, modifier = Modifier.fillMaxWidth().testTag("createFood")) { Text("Create manual food") }
         OutlinedTextField(search, onValueChange = { search = it }, label = { Text("Search saved foods") }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

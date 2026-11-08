@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.fitness.core.ProviderKeysCard
 import com.example.fitness.data.ProfileRepository
 import com.example.fitness.data.ProfileState
 import kotlinx.coroutines.CancellationException
@@ -134,6 +135,7 @@ fun ProfileScreen(state: ProfileState, repository: ProfileRepository, onboarding
                 }
             }, modifier = Modifier.fillMaxWidth().testTag("restoreEstimate")) { Text("Use estimated goal") }
             goalMessage?.let { Text(it, modifier = Modifier.testTag("goalMessage")) }
+            ProviderKeysCard()
         }
 
     }

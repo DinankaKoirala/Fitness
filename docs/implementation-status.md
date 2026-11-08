@@ -20,7 +20,8 @@ queue requests locally and retry only from an explicit foreground workflow.
 - Phase 5: software verified; docs/phase-5.md.
 - Phase 6: software verified; user-key imagery and physical terrain acceptance pending; docs/phase-6.md.
 - Phase 7: software verified; docs/phase-7.md.
-- Phases 8–11: pending.
+- Phase 8: software verified; keyed provider/physical camera acceptance pending; docs/phase-8.md.
+- Phases 9–11: pending.
 
 Hardware limitations must remain explicit: this workspace has an Android 35
 emulator but no physical Xiaomi phone. Full-day battery measurements require
@@ -34,3 +35,7 @@ food edits. Unknown micronutrients remain null; partial totals are labeled.
 Only matching g/ml units or saved servings are accepted; no mass/volume guessing.
 Macro bars show estimated 4/9/4 energy toward the calorie goal, avoiding invented
 macro targets. Schema v2 has an explicit v1→v2 migration and backfill.
+
+ML Kit was replaced by offline Tesseract/ZXing because Google documents SDK usage
+analytics without a supported opt-out, conflicting with the explicit privacy
+rules. CameraX remains. This was explained in commentary and docs/phase-8.md.

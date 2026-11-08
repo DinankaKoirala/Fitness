@@ -34,14 +34,14 @@ internal fun FoodDialog(title: String, busy: Boolean = false, onClose: () -> Uni
 }
 
 @Composable
-internal fun FoodEditor(food: Food?, logged: Boolean, onClose: () -> Unit, onSave: suspend (Food) -> Unit) {
+internal fun FoodEditor(food: Food?, logged: Boolean, missing: Set<String> = emptySet(), notice: String? = null, onClose: () -> Unit, onSave: suspend (Food) -> Unit) {
     var name by rememberSaveable { mutableStateOf(food?.name.orEmpty()) }
     var servingAmount by rememberSaveable { mutableStateOf(food?.servingAmount?.toString() ?: "100") }
     var unit by rememberSaveable { mutableStateOf(food?.servingUnit ?: "g") }
-    var calories by rememberSaveable { mutableStateOf(food?.nutrients?.caloriesKcal?.toString().orEmpty()) }
-    var protein by rememberSaveable { mutableStateOf(food?.nutrients?.proteinG?.toString().orEmpty()) }
-    var fat by rememberSaveable { mutableStateOf(food?.nutrients?.fatG?.toString().orEmpty()) }
-    var carbs by rememberSaveable { mutableStateOf(food?.nutrients?.carbsG?.toString().orEmpty()) }
+    var calories by rememberSaveable { mutableStateOf(if ("caloriesKcal" in missing) "" else food?.nutrients?.caloriesKcal?.toString().orEmpty()) }
+    var protein by rememberSaveable { mutableStateOf(if ("proteinG" in missing) "" else food?.nutrients?.proteinG?.toString().orEmpty()) }
+    var fat by rememberSaveable { mutableStateOf(if ("fatG" in missing) "" else food?.nutrients?.fatG?.toString().orEmpty()) }
+    var carbs by rememberSaveable { mutableStateOf(if ("carbsG" in missing) "" else food?.nutrients?.carbsG?.toString().orEmpty()) }
     var fiber by rememberSaveable { mutableStateOf(food?.nutrients?.fiberG?.toString().orEmpty()) }
     var sodium by rememberSaveable { mutableStateOf(food?.nutrients?.sodiumMg?.toString().orEmpty()) }
     var calcium by rememberSaveable { mutableStateOf(food?.nutrients?.calciumMg?.toString().orEmpty()) }
@@ -55,6 +55,8 @@ internal fun FoodEditor(food: Food?, logged: Boolean, onClose: () -> Unit, onSav
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     FoodDialog(if (logged) "Edit logged nutrition" else if (food == null) "Create food" else "Edit saved food", busy, onClose) {
+        notice?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+        if (missing.isNotEmpty()) Text("Some required values are unknown. Fill the blank macros from the label before saving.")
         Text(if (logged) "Changes apply only to this entry. Past entries and your saved food stay as recorded."
              else "Nutrition is per saved serving. Editing a saved food affects future logs only.")
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Food name") },

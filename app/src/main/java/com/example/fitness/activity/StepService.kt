@@ -38,7 +38,7 @@ class StepService : Service(), SensorEventListener {
         val pending = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val stop = PendingIntent.getService(this, 31, Intent(this, StepService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val notification = Notification.Builder(this, "steps").setSmallIcon(R.drawable.ic_activity)
-            .setContentTitle("Fitness step tracking").setContentText("Counting steps on this device")
+            .setContentTitle("HiFitli step tracking").setContentText("Counting steps on this device")
             .setContentIntent(pending).setOngoing(true).addAction(Notification.Action.Builder(null, "Stop", stop).build()).build()
         try {
             if (Build.VERSION.SDK_INT >= 34) startForeground(30, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)

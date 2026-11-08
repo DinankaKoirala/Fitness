@@ -3,7 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    `maven-publish`
 }
+val distributionVersion = providers.gradleProperty("distributionVersion").orElse("0.1.0")
 android {
     namespace = "com.example.fitness"
     compileSdk = 35
@@ -11,8 +13,8 @@ android {
         applicationId = "com.example.fitness"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = providers.gradleProperty("distributionVersionCode").orElse("1").get().toInt()
+        versionName = distributionVersion.get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets.getByName("main").assets.srcDir("$rootDir/licenses")
@@ -23,6 +25,38 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+}
+publishing {
+    publications {
+        create<MavenPublication>("hiFitliApk") {
+            groupId = "io.github.dinankakoirala"
+            artifactId = "hifitli"
+            version = distributionVersion.get()
+            artifact(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk")) {
+                extension = "apk"
+                builtBy(providers.provider { tasks.getByName("assembleDebug") })
+            }
+            pom {
+                name.set("HiFitli")
+                description.set("HiFitli Android fitness tracker — development APK")
+                url.set("https://github.com/DinankaKoirala/Fitness")
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/" + providers.environmentVariable("GITHUB_REPOSITORY").orElse("DinankaKoirala/Fitness").get().lowercase())
+            credentials {
+                username = providers.environmentVariable("GITHUB_ACTOR").orNull
+                password = providers.environmentVariable("GITHUB_TOKEN").orNull
+            }
+        }
+        maven {
+            name = "DistributionCheck"
+            url = layout.buildDirectory.dir("distribution-check").get().asFile.toURI()
+        }
+    }
 }
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 dependencies {

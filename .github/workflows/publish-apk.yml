@@ -1,0 +1,59 @@
+name: Build and publish HiFitli APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hifitli-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install pinned Android SDK components
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+      - name: Set unique package version
+        run: |
+          echo "HIFITLI_VERSION=0.1.0-build.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "HIFITLI_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1))" >> "$GITHUB_ENV"
+      - name: Build, test and lint
+        run: ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug -PdistributionVersion="$HIFITLI_VERSION" -PdistributionVersionCode="$HIFITLI_VERSION_CODE"
+      - name: Prepare installable download
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/HiFitli.apk
+          cd dist
+          sha256sum HiFitli.apk > HiFitli.apk.sha256
+      - name: Retain workflow APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HiFitli-${{ env.HIFITLI_VERSION }}
+          path: dist/*
+          if-no-files-found: error
+      - name: Publish APK to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew --no-daemon :app:publishHiFitliApkPublicationToGitHubPackagesRepository -PdistributionVersion="$HIFITLI_VERSION" -PdistributionVersionCode="$HIFITLI_VERSION_CODE"
+      - name: Publish direct APK download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v$HIFITLI_VERSION" dist/HiFitli.apk dist/HiFitli.apk.sha256 \
+            --target "$GITHUB_SHA" --title "HiFitli $HIFITLI_VERSION" --prerelease \
+            --notes "HiFitli development APK. Android 8+; debug signed. Physical Xiaomi/full-day battery and user-key provider checks remain pending. CI debug signing keys can change between builds; export a JSON backup before replacing an installation if Android reports a signature mismatch."

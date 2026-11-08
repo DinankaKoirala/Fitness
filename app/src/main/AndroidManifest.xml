@@ -17,7 +17,7 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <application android:name=".FitnessApplication" android:allowBackup="false" android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@drawable/ic_launcher"
-        android:label="Fitness" android:supportsRtl="true" android:theme="@style/Theme.Fitness">
+        android:label="@string/app_name" android:supportsRtl="true" android:theme="@style/Theme.Fitness">
         <service android:name=".activity.RouteService" android:exported="false" android:foregroundServiceType="location" />
         <receiver android:name=".activity.MotionReceiver" android:exported="false" />
         <service android:name=".activity.StepService" android:exported="false" android:foregroundServiceType="health" />

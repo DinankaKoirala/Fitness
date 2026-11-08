@@ -1,4 +1,4 @@
-# Fitness
+# HiFitli
 
 Android-only, offline-first fitness tracker built with Kotlin and Jetpack Compose.
 The software implementation covers Phases 0–11 of the supplied plan. Physical
@@ -89,3 +89,36 @@ yuhonas/free-exercise-db (Unlicense).
 Remaining decisions before distribution: final application ID/signing, user API
 keys/provider billing choices, physical Xiaomi acceptance and measured full-day
 battery usage. No remote repository push or publication is performed.
+
+## GitHub APK distribution
+
+Every push to `main` (or manual **Actions → Build and publish HiFitli APK → Run
+workflow**) builds, unit-tests and lints the app, then publishes:
+
+- **GitHub Packages:** Maven artifact
+  `io.github.dinankakoirala:hifitli:0.1.0-build.<run>.<attempt>@apk`, linked to this
+  repository. GitHub Packages downloads require GitHub authentication.
+- **Releases:** a development prerelease with the directly downloadable
+  `HiFitli.apk` and its SHA-256 checksum.
+- **Actions artifacts:** a retained copy of the APK and checksum.
+
+Find downloads at [Releases](https://github.com/DinankaKoirala/Fitness/releases)
+and packages on the repository’s GitHub page. The workflow uses GitHub’s own
+short-lived `GITHUB_TOKEN` with package/content write permissions; no personal
+access token is committed or required as a repository secret. Repository/organization
+policy must allow GitHub Actions publishing.
+
+Builds are debug signed. GitHub runners can generate different debug keys, so
+Android may require uninstalling an earlier build. Export a JSON backup first;
+restore after reinstalling. A stable production signing key remains a separate
+release decision. The display name is HiFitli; the existing application ID is
+preserved for local installation/data compatibility.
+
+To verify APK publication locally without contacting GitHub:
+
+```sh
+./gradlew :app:publishHiFitliApkPublicationToDistributionCheckRepository
+```
+
+The APK and POM are written under `app/build/distribution-check/`. Publishing
+configuration follows [GitHub’s Gradle registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry).

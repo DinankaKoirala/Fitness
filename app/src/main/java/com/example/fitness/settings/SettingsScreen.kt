@@ -61,7 +61,7 @@ internal fun SettingsScreen(onClose: () -> Unit) {
             }
         }
         BackupCard()
-        Text("About Fitness", style = MaterialTheme.typography.titleLarge)
+        Text("About HiFitli", style = MaterialTheme.typography.titleLarge)
         Text("Version 0.1.0 · Android 8+ · metric units\nLocal fitness records, no account or analytics. Explicit provider searches and viewed maps use the internet only while the app is visible. Device cloud backup is disabled; use your own JSON export.")
         Text("Nutrition, calories, automatic motion labels and AI output are estimates. Unknown micronutrients remain unknown. Review and edit estimates before relying on them.")
         Text("Swiss Food Composition Database: Federal Food Safety and Veterinary Office (FSVO), version 7.1. Exercise definitions: free-exercise-db. Street maps © OpenStreetMap contributors; satellite and terrain © MapTiler with your key.")

@@ -16,5 +16,5 @@ dependencyResolutionManagement {
         }
     }
 }
-rootProject.name = "Fitness"
+rootProject.name = "HiFitli"
 include(":app")

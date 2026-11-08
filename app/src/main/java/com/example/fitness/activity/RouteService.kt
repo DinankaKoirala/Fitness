@@ -57,7 +57,7 @@ class RouteService : Service(), LocationListener, SensorEventListener {
         val open = PendingIntent.getActivity(this, 40, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val stop = PendingIntent.getService(this, 41, Intent(this, RouteService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val notification = Notification.Builder(this, "route").setSmallIcon(R.drawable.ic_activity)
-            .setContentTitle("Fitness route recording").setContentText("GPS sleeps while still · all data stays on this device")
+            .setContentTitle("HiFitli route recording").setContentText("GPS sleeps while still · all data stays on this device")
             .setContentIntent(open).setOngoing(true).addAction(Notification.Action.Builder(null, "Stop", stop).build()).build()
         try {
             if (Build.VERSION.SDK_INT >= 29) startForeground(40, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)

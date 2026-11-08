@@ -34,6 +34,7 @@ fun ActivityScreen() {
         Text("Activity", style = MaterialTheme.typography.headlineLarge)
         Text(date)
         StepsCard(date)
+        RouteControls()
     }
 }
 

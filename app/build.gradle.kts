@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.coroutines.android)
+    implementation(libs.play.location)
     testImplementation(libs.junit)
     ksp(libs.room.compiler)
     androidTestImplementation(platform(libs.compose.bom))

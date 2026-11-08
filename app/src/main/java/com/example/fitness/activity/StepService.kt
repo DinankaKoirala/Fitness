@@ -91,7 +91,10 @@ class TrackingBootReceiver : BroadcastReceiver() {
             try {
                 val enabled = ActivitySettings(context).stepsEnabled.first()
                 if (enabled && StepService.permitted(context)) StepService.start(context)
-            } catch (_: Exception) { ActivitySettings(context).error("Open Activity to resume tracking after restart.") }
+                val route = ActivitySettings(context).routeEnabled.first()
+                if (route && RouteService.hasLocation(context) && RouteService.hasBackground(context)) RouteService.start(context)
+                else if (route) ActivitySettings(context).routeError("Open Activity to resume recording; all-the-time location is required after boot.")
+            } catch (_: Exception) { runCatching { ActivitySettings(context).error("Open Activity to resume tracking after restart.") } }
             finally { result.finish() }
         }
     }

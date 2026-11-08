@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.Fitness.Base" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:colorBackground">#12151a</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#12151a</item>
+        <item name="android:navigationBarColor">#1b1f26</item>
+        <item name="android:windowBackground">#12151a</item>
+    </style>
+    <style name="Theme.Fitness" parent="Theme.Fitness.Base" />
+</resources>

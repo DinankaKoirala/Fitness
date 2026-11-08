@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.Fitness" parent="Theme.Fitness.Base">
+        <item name="android:windowSplashScreenBackground">#12151a</item>
+    </style>
+</resources>

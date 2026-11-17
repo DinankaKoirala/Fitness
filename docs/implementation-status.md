@@ -45,3 +45,18 @@ macro targets. Schema v2 has an explicit v1→v2 migration and backfill.
 ML Kit was replaced by offline Tesseract/ZXing because Google documents SDK usage
 analytics without a supported opt-out, conflicting with the explicit privacy
 rules. CameraX remains. This was explained in commentary and docs/phase-8.md.
+
+## November 17 follow-up
+
+Added up to eight combined meal/label photos per AI request, multi-image local
+queue persistence and backup handling, and explicit prompt-based saving ("add/save
+to database" or "saved foods"). Other prompts retain editable review. OCR remains
+offline; selected label photos can also join the AI request. Main pages support
+horizontal swipes; daily micros start collapsed while macros remain visible.
+Scan dialog exposes encrypted provider key settings. AI failures now preserve
+HTTP guidance for key permissions, unavailable models and quota, with a longer
+AI response timeout. No credential is embedded in source.
+
+Validation: debug APK, JVM tests and lint passed. Live Gemini verification still
+requires a user key entered on the device; gestures and multi-photo capture need
+device acceptance. No publication performed.

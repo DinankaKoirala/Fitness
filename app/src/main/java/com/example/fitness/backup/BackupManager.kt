@@ -42,7 +42,7 @@ class BackupManager(private val context: Context, private val database: FitnessD
                 preferences.keys().forEach { key -> writer.name(key); when (val value = preferences.get(key)) { is Boolean -> writer.value(value); is Number -> writer.value(value); else -> writer.value(value.toString()) } }
                 writer.endObject().name("images").beginArray()
                 val images = mutableSetOf<String>()
-                sql.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { rows -> while (rows.moveToNext()) images.add(imageName(rows.getString(0))) }
+                sql.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { rows -> while (rows.moveToNext()) images.addAll(rows.getString(0).split(",").map(::imageName)) }
                 images.forEach { name ->
                     val image = File(imageFolder, name)
                     require(image.isFile && image.length() <= 3_000_000) { "A queued image is unavailable. Discard that request before backing up." }
@@ -108,8 +108,10 @@ class BackupManager(private val context: Context, private val database: FitnessD
                 }
                 require(seen == setOf("format", "formatVersion", "schemaVersion", "createdAt", "tables", "settings", "images")) { "Incomplete backup." }
                 checkData(sql)
-                sql.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { rows -> while (rows.moveToNext()) require(imageName(rows.getString(0)) in images) { "Queued image missing from backup." } }
-                require(images.all { name -> sql.query("SELECT id FROM QueuedAiRequest WHERE imagePath = ?", arrayOf(name)).use { it.moveToFirst() } }) { "Unreferenced backup image." }
+                sql.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { rows -> while (rows.moveToNext()) require(rows.getString(0).split(",").map(::imageName).all { it in images }) { "Queued image missing from backup." } }
+                val referencedImages = mutableSetOf<String>()
+                sql.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { rows -> while (rows.moveToNext()) referencedImages.addAll(rows.getString(0).split(",").map(::imageName)) }
+                require(images == referencedImages) { "Unreferenced backup image." }
             }
             currentCoroutineContext().ensureActive()
             stage
@@ -171,7 +173,7 @@ class BackupManager(private val context: Context, private val database: FitnessD
         val folder = File(context.noBackupFilesDir, "restore-$token")
         if (committed) {
             val referenced = mutableSetOf<String>()
-            database.openHelper.readableDatabase.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { c -> while (c.moveToNext()) referenced.add(imageName(c.getString(0))) }
+            database.openHelper.readableDatabase.query("SELECT imagePath FROM QueuedAiRequest WHERE imagePath IS NOT NULL").use { c -> while (c.moveToNext()) referenced.addAll(c.getString(0).split(",").map(::imageName)) }
             referenced.forEach { name ->
                 val source = File(folder, name)
                 if (source.isFile) {

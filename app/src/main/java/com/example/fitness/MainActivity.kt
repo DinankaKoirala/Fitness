@@ -7,6 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,6 +78,7 @@ fun FitnessApp(repository: ProfileRepository, foods: FoodRepository) {
         return
     }
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    val swipeThreshold = with(LocalDensity.current) { 80.dp.toPx() }
     val tabStates = rememberSaveableStateHolder()
     val tabs = listOf("Food", "Activity", "Gym", "Profile")
     val icons = listOf(R.drawable.ic_food, R.drawable.ic_activity, R.drawable.ic_gym, R.drawable.ic_profile)
@@ -91,7 +95,18 @@ fun FitnessApp(repository: ProfileRepository, foods: FoodRepository) {
             }
         }
     }) { padding ->
-        Surface(Modifier.padding(padding), color = MaterialTheme.colorScheme.background) {
+        Surface(Modifier.padding(padding).fillMaxSize().pointerInput(selected) {
+            var distance = 0f
+            detectHorizontalDragGestures(
+                onDragStart = { distance = 0f },
+                onHorizontalDrag = { change, delta -> change.consume(); distance += delta },
+                onDragCancel = { distance = 0f },
+                onDragEnd = {
+                    if (kotlin.math.abs(distance) >= swipeThreshold)
+                        selected = (selected + if (distance < 0) 1 else -1).coerceIn(0, 3)
+                }
+            )
+        }, color = MaterialTheme.colorScheme.background) {
             tabStates.SaveableStateProvider(selected) {
             when (selected) {
                 0 -> FoodScreen(requireNotNull(state.goal), estimated = state.manualGoal == null, repository = foods)

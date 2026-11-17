@@ -29,7 +29,17 @@ suspend fun requestJson(client: OkHttpClient, request: Request): String = suspen
         override fun onResponse(call: Call, response: Response) {
             try {
                 val text = response.use {
-                    if (!it.isSuccessful) throw IOException("Provider request failed (HTTP ${it.code}).")
+                    if (!it.isSuccessful) {
+                        val hint = if (request.url.host == "generativelanguage.googleapis.com") when (it.code) {
+                            400 -> "Check your Gemini API key, request, and account region."
+                            401, 403 -> "Set or update your Gemini API key and check its permissions."
+                            404 -> "The Gemini model is unavailable. Update the model ID in Provider settings."
+                            429 -> "Gemini quota exceeded. Check your account quota or retry later."
+                            in 500..599 -> "Gemini is temporarily unavailable. Retry later."
+                            else -> "Check Gemini Provider settings."
+                        } else "Try again later."
+                        throw IOException("Provider request failed (HTTP ${it.code}). $hint")
+                    }
                     val body = it.body ?: throw IOException("Provider returned no data.")
                     if (body.contentLength() > 5_000_000) throw IOException("Provider response is too large.")
                     body.string().also { value -> if (value.length > 5_000_000) throw IOException("Provider response is too large.") }

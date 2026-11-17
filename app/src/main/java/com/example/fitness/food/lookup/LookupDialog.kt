@@ -34,7 +34,8 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
     var draftJson by rememberSaveable { mutableStateOf<String?>(null) }
     var results by remember { mutableStateOf<List<FoodCandidate>>(emptyList()) }
     var camera by rememberSaveable { mutableStateOf<String?>(null) }
-    var photoName by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoNames by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
+    var showApi by remember { mutableStateOf(false) }
     var imageAction by rememberSaveable { mutableStateOf("label") }
     var busy by remember { mutableStateOf(false) }
     var message by rememberSaveable { mutableStateOf<String?>(null) }
@@ -50,10 +51,11 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
     }
     suspend fun process(uri: Uri, kind: String) {
         val file = vision.normalize(uri)
-        if (kind == "meal") {
-            photoName?.let { File(File(context.cacheDir, "selected_images"), it).delete() }
-            photoName = file.name
-            message = "Meal photo selected. It stays on this device until you request a Gemini estimate."
+        if (kind == "meal" || kind == "label") {
+            if (photoNames.size >= 8) { file.delete(); error("Choose up to 8 images. Clear photos to start again.") }
+            photoNames = ArrayList(photoNames + file.name)
+            message = "${photoNames.size} photos selected locally."
+            if (kind == "label") rawLabel = listOf(rawLabel, vision.text(file)).filter { it.isNotBlank() }.joinToString("\n")
         } else try {
             if (kind == "label") {
                 rawLabel = vision.text(file)
@@ -66,8 +68,8 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
             }
         } finally { withContext(Dispatchers.IO) { file.delete() } }
     }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { action { process(it, imageAction) } }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (uris.isNotEmpty()) action { uris.forEach { process(it, imageAction) } }
     }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (it) camera = imageAction else message = "Camera permission was declined. Choose an existing image or use manual entry."
@@ -107,6 +109,10 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
         }
         Button(enabled = !busy, onClick = { action {
             results = controller.search(query, source)
+            if (requestsDatabaseSave(query) && results.size == 1 && results.first().food.estimated) {
+                val result = results.first()
+                onImported(controller.confirm(result, result.food))
+            }
             if (results.isEmpty()) message = "No matching food found. Try a different source or create a manual food."
         } }, modifier = Modifier.testTag("searchFoods")) { Text(if (busy) "Working…" else "Search / estimate") }
         results.forEachIndexed { index, result ->
@@ -136,13 +142,20 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
             TextButton(enabled = !busy && mode != LookupMode.DATABASE_ONLY, onClick = { take("meal") }) { Text("Take meal photo") }
             TextButton(enabled = !busy && mode != LookupMode.DATABASE_ONLY, onClick = { imageAction = "meal"; picker.launch("image/*") }) { Text("Choose meal photo") }
         }
-        val photo = photoName?.takeIf { it.matches(Regex("[a-fA-F0-9-]+\\.jpg")) }?.let { File(File(context.cacheDir, "selected_images"), it) }
-        if (photo?.isFile == true) {
-            Text("Photo ready · on this device")
+        val photos = photoNames.map { File(File(context.cacheDir, "selected_images"), it) }
+        if (photos.isNotEmpty()) {
+            Text("${photos.size} meal / label photos ready · on this device")
+            TextButton(enabled = !busy, onClick = {
+                photos.forEach { it.delete() }; photoNames = arrayListOf()
+            }) { Text("Clear photos") }
             Button(enabled = !busy && mode != LookupMode.DATABASE_ONLY, onClick = { action {
-                draftJson = encodeDraft(controller.estimate(query.ifBlank { "Estimate this meal" }, photo))
-            } }) { Text("Send photo to Gemini for estimate") }
+                val result = controller.estimateImages(query.ifBlank { "Estimate this meal using the photos and labels" }, photos)
+                if (requestsDatabaseSave(query)) onImported(controller.confirm(result, result.food))
+                else draftJson = encodeDraft(result)
+            } }) { Text("Send photos to AI") }
         }
+        TextButton(enabled = !busy, onClick = { showApi = !showApi }) { Text("Set / update Gemini API key") }
+        if (showApi) com.example.fitness.core.ProviderKeysCard()
         if (pending.isNotEmpty()) {
             HorizontalDivider(); Text("Saved AI requests", style = MaterialTheme.typography.titleLarge)
             Text("No background uploads. Retry here on Wi-Fi or while charging; completed drafts can be reviewed offline.")
@@ -150,7 +163,11 @@ fun LookupDialog(onClose: () -> Unit, onImported: (Long) -> Unit) {
                 Text(request.prompt.take(120))
                 Row {
                     TextButton(enabled = !busy && (request.response != null || mode != LookupMode.DATABASE_ONLY), onClick = { action {
-                        if (request.response != null || controller.canRetry()) draftJson = encodeDraft(controller.perform(request.id))
+                        if (request.response != null || controller.canRetry()) {
+                            val result = controller.perform(request.id)
+                            if (requestsDatabaseSave(request.prompt)) onImported(controller.confirm(result, result.food))
+                            else draftJson = encodeDraft(result)
+                        }
                         else message = "Connect to Wi-Fi or charge the device before retrying."
                     } }) { Text(if (request.response != null) "Review estimate" else "Retry") }
                     TextButton(enabled = !busy, onClick = { action { controller.discard(request.id) } }) { Text("Discard") }

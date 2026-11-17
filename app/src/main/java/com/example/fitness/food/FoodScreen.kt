@@ -195,9 +195,13 @@ private fun NutritionSummary(totals: NutritionTotals, goal: Int, estimated: Bool
 
 @Composable
 private fun MicroCard(totals: NutritionTotals) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Micronutrients", style = MaterialTheme.typography.titleLarge)
+            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.testTag("toggleMicros")) {
+                Text(if (expanded) "Hide micros ▴" else "Show micros ▾")
+            }
+            if (expanded) {
             totals.micros.forEach { (micro, total) ->
                 val value = when {
                     total.count > 0 && total.known == 0 -> "Unknown"
@@ -209,6 +213,7 @@ private fun MicroCard(totals: NutritionTotals) {
                 }
             }
             if (totals.micros.values.any { it.known < it.count }) Text("Partial totals show known amounts only. Missing values are not measured zero.", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

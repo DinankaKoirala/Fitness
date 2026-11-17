@@ -38,27 +38,30 @@ class LookupController(private val context: Context, private val database: Fitne
         require(settings.mode.first() != LookupMode.AI_ONLY) { "Barcode lookup needs a database mode." }
         return OpenFoodFacts(client).barcode(code)
     }
-    suspend fun estimate(description: String, photo: File?): FoodCandidate {
+    suspend fun estimate(description: String, photo: File?): FoodCandidate = estimateImages(description, listOfNotNull(photo))
+    suspend fun estimateImages(description: String, photos: List<File>): FoodCandidate {
+        require(description.isNotBlank() && description.length <= 5000) { "Enter a description up to 5,000 characters." }
+        require(photos.size <= 8) { "Choose up to 8 images." }
         require(settings.mode.first() != LookupMode.DATABASE_ONLY) { "AI is disabled in database-only mode." }
-        val image = photo?.let {
+        val images = photos.map {
             withContext(Dispatchers.IO) {
                 val folder = File(context.filesDir, "ai_images").apply { mkdirs() }
                 File(folder, UUID.randomUUID().toString() + ".jpg").also { target -> it.copyTo(target) }
             }
         }
-        val id = database.aiQueueDao().insert(QueuedAiRequest(prompt = description, imagePath = image?.name))
+        val id = database.aiQueueDao().insert(QueuedAiRequest(prompt = description, imagePath = images.takeIf { it.isNotEmpty() }?.joinToString(",") { it.name }))
         return try { perform(id) } catch (failure: Exception) {
             if (failure is CancellationException) throw failure
-            throw IllegalStateException("Request saved on this device. Add/check your key and retry here on Wi-Fi or while charging.")
+            throw IllegalStateException("Request saved on this device. ${failure.message ?: "AI request failed."} Retry below.", failure)
         }
     }
     suspend fun perform(id: Long): FoodCandidate {
         val request = requireNotNull(database.aiQueueDao().request(id)) { "Request no longer exists." }
         request.response?.let { return deserializeCandidate(it, id) }
         require(settings.mode.first() != LookupMode.DATABASE_ONLY) { "Switch from database-only mode to retry AI requests." }
-        val image = request.imagePath?.let { safeImage(it) }
-        require(image == null || image.isFile) { "The saved image is unavailable. Discard this request and select it again." }
-        val candidate = ai.estimate(request.prompt, image)
+        val images = request.imagePath?.split(",")?.map(::safeImage).orEmpty()
+        require(images.all { it.isFile }) { "The saved image is unavailable. Discard this request and select it again." }
+        val candidate = ai.estimateImages(request.prompt, images)
         database.aiQueueDao().update(request.copy(response = serializeCandidate(candidate), updatedAt = System.currentTimeMillis()))
         return candidate.copy(requestId = id)
     }
@@ -74,7 +77,7 @@ class LookupController(private val context: Context, private val database: Fitne
     suspend fun discard(id: Long) {
         val old = database.aiQueueDao().request(id)
         database.aiQueueDao().delete(id)
-        old?.imagePath?.let { withContext(Dispatchers.IO) { safeImage(it).delete() } }
+        old?.imagePath?.let { withContext(Dispatchers.IO) { it.split(",").forEach { name -> safeImage(name).delete() } } }
     }
     suspend fun confirm(value: FoodCandidate, food: Food): Long {
         val result = database.withTransaction {
@@ -83,7 +86,7 @@ class LookupController(private val context: Context, private val database: Fitne
             request?.let { database.aiQueueDao().delete(it.id) }
             id to request?.imagePath
         }
-        result.second?.let { withContext(Dispatchers.IO) { safeImage(it).delete() } }
+        result.second?.let { withContext(Dispatchers.IO) { it.split(",").forEach { name -> safeImage(name).delete() } } }
         return result.first
     }
 }
